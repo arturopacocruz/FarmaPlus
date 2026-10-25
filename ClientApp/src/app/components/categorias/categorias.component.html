@@ -1,0 +1,105 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gestión de Categorías</h1>
+      <p class="page-desc">Administra los grupos y clasificaciones de los productos farmacéuticos</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModalCrear()">
+      <i class="fa-solid fa-plus"></i>
+      <span>Nueva Categoría</span>
+    </button>
+  </div>
+
+  @if (errorMensaje) {
+    <div class="alert-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMensaje }}</span>
+    </div>
+  }
+
+  @if (cargando) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando categorías desde el backend...</p>
+    </div>
+  } @else {
+    <div class="grid-categorias">
+      @for (cat of categorias; track cat.id) {
+        <div class="categoria-card">
+          <div class="card-top">
+            <div class="cat-icon">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <div class="cat-actions">
+              <button class="btn-icon edit" (click)="abrirModalEditar(cat)" title="Editar">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn-icon delete" (click)="eliminarCategoria(cat.id)" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <h3 class="cat-title">{{ cat.nombre }}</h3>
+          <p class="cat-desc">{{ cat.descripcion || 'Sin descripción detallada.' }}</p>
+
+          <div class="card-footer">
+            <span class="product-count">
+              <i class="fa-solid fa-cubes"></i>
+              {{ cat.cantidadProductos || 0 }} productos
+            </span>
+            <span class="cat-id">ID: #{{ cat.id }}</span>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <i class="fa-solid fa-folder-plus"></i>
+          <p>No hay categorías registradas en la base de datos.</p>
+        </div>
+      }
+    </div>
+  }
+
+  @if (modalAbierto) {
+    <div class="modal-backdrop" (click)="cerrarModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ modoEdicion ? 'Editar Categoría' : 'Nueva Categoría' }}</h2>
+          <button class="modal-close" (click)="cerrarModal()">&times;</button>
+        </div>
+
+        <form (ngSubmit)="guardarCategoria()">
+          <div class="form-group">
+            <label for="nombre">Nombre de la Categoría *</label>
+            <input
+              type="text"
+              id="nombre"
+              name="nombre"
+              [(ngModel)]="categoriaForm.nombre"
+              placeholder="Ej: Antibióticos, Analgésicos..."
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea
+              id="descripcion"
+              name="descripcion"
+              rows="3"
+              [(ngModel)]="categoriaForm.descripcion"
+              placeholder="Breve detalle de la categoría..."
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="!categoriaForm.nombre.trim()">
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

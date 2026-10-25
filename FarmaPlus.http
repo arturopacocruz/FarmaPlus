@@ -1,0 +1,75 @@
+@FarmaPlus_HostAddress = http://localhost:5017
+
+GET {{FarmaPlus_HostAddress}}/api/categorias
+Accept: application/json
+
+###
+
+GET {{FarmaPlus_HostAddress}}/api/categorias/1
+Accept: application/json
+
+###
+
+POST {{FarmaPlus_HostAddress}}/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Dermatología",
+  "descripcion": "Cuidado de la piel y tratamientos dermatológicos"
+}
+
+###
+
+GET {{FarmaPlus_HostAddress}}/api/productos
+Accept: application/json
+
+###
+
+GET {{FarmaPlus_HostAddress}}/api/productos/1
+Accept: application/json
+
+###
+
+GET {{FarmaPlus_HostAddress}}/api/productos?categoriaId=1
+Accept: application/json
+
+###
+
+GET {{FarmaPlus_HostAddress}}/api/productos?buscar=Paracetamol
+Accept: application/json
+
+###
+
+POST {{FarmaPlus_HostAddress}}/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Ibuprofeno 400mg",
+  "descripcion": "Cápsulas antiinflamatorias y analgésicas",
+  "precio": 4.50,
+  "stock": 100,
+  "codigoBarras": "7758899001122",
+  "requiereReceta": false,
+  "fechaVencimiento": "2027-10-15T00:00:00Z",
+  "categoriaId": 1
+}
+
+###
+
+PUT {{FarmaPlus_HostAddress}}/api/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Paracetamol 500mg Forte",
+  "descripcion": "Analgésico y antipirético mejorado",
+  "precio": 3.80,
+  "stock": 115,
+  "codigoBarras": "7750123456789",
+  "requiereReceta": false,
+  "fechaVencimiento": "2027-06-30T00:00:00Z",
+  "categoriaId": 1
+}
+
+###
+
+DELETE {{FarmaPlus_HostAddress}}/api/productos/1

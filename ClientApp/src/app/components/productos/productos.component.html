@@ -1,0 +1,230 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Catálogo Farmacéutico</h1>
+      <p class="page-desc">Consulta, busca y gestiona medicamentos y artículos de FarmaPlus</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModalCrear()">
+      <i class="fa-solid fa-plus"></i>
+      <span>Nuevo Producto</span>
+    </button>
+  </div>
+
+  @if (errorMensaje) {
+    <div class="alert-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMensaje }}</span>
+    </div>
+  }
+
+  <div class="toolbar-card">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="terminoBusqueda"
+        (keyup.enter)="buscar()"
+        placeholder="Buscar por nombre, descripción o código de barras..."
+      />
+      @if (terminoBusqueda) {
+        <button class="clear-search" (click)="terminoBusqueda = ''; buscar()">&times;</button>
+      }
+      <button class="btn-search" (click)="buscar()">Buscar</button>
+    </div>
+
+    <div class="filter-pills">
+      <button
+        class="pill"
+        [class.active]="categoriaSeleccionadaId === 0"
+        (click)="filtrarPorCategoria(0)"
+      >
+        Todas las Categorías
+      </button>
+      @for (cat of categorias; track cat.id) {
+        <button
+          class="pill"
+          [class.active]="categoriaSeleccionadaId === cat.id"
+          (click)="filtrarPorCategoria(cat.id)"
+        >
+          {{ cat.nombre }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando productos desde el backend FarmaPlus...</p>
+    </div>
+  } @else {
+    <div class="grid-productos">
+      @for (p of productos; track p.id) {
+        <div class="product-card">
+          <div class="card-head">
+            <span class="category-tag">
+              <i class="fa-solid fa-tag"></i> {{ p.categoriaNombre || 'General' }}
+            </span>
+            <div class="actions">
+              <button class="btn-icon edit" (click)="abrirModalEditar(p)" title="Editar">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn-icon delete" (click)="eliminarProducto(p.id)" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <h3 class="prod-title">{{ p.nombre }}</h3>
+          <p class="prod-desc">{{ p.descripcion }}</p>
+
+          <div class="badges-row">
+            <span [appStockStatus]="p.stock"></span>
+            <span [appRecetaBadge]="p.requiereReceta"></span>
+          </div>
+
+          <div class="card-meta">
+            @if (p.codigoBarras) {
+              <div class="meta-item">
+                <i class="fa-solid fa-barcode"></i>
+                <span>{{ p.codigoBarras }}</span>
+              </div>
+            }
+            <div class="meta-item">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>{{ p.fechaVencimiento | estadoVencimiento }}</span>
+            </div>
+          </div>
+
+          <div class="card-bottom">
+            <div class="price-container">
+              <span class="price-label">Precio Unitario</span>
+              <span class="price-val">{{ p.precio | formatoPrecio:'Bs.' }}</span>
+            </div>
+            <span class="prod-id">ID: #{{ p.id }}</span>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <i class="fa-solid fa-box-open"></i>
+          <p>No se encontraron productos que coincidan con los filtros aplicados.</p>
+          <button class="btn-secondary" style="margin-top: 1rem;" (click)="limpiarFiltros()">Restablecer Filtros</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (modalAbierto) {
+    <div class="modal-backdrop" (click)="cerrarModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ modoEdicion ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+          <button class="modal-close" (click)="cerrarModal()">&times;</button>
+        </div>
+
+        <form (ngSubmit)="guardarProducto()">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="nombre">Nombre Comercial / Producto *</label>
+              <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                [(ngModel)]="productoForm.nombre"
+                placeholder="Ej: Paracetamol 500mg"
+                required
+              />
+            </div>
+
+            <div class="form-group full">
+              <label for="descripcion">Descripción *</label>
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                rows="2"
+                [(ngModel)]="productoForm.descripcion"
+                placeholder="Detalle terapéutico o indicaciones..."
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="categoria">Categoría *</label>
+              <select id="categoria" name="categoriaId" [(ngModel)]="productoForm.categoriaId" required>
+                @for (c of categorias; track c.id) {
+                  <option [value]="c.id">{{ c.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="precio">Precio (Bs.) *</label>
+              <input
+                type="number"
+                id="precio"
+                name="precio"
+                step="0.01"
+                min="0.01"
+                [(ngModel)]="productoForm.precio"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="stock">Stock en Almacén *</label>
+              <input
+                type="number"
+                id="stock"
+                name="stock"
+                min="0"
+                [(ngModel)]="productoForm.stock"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="codigoBarras">Código de Barras</label>
+              <input
+                type="text"
+                id="codigoBarras"
+                name="codigoBarras"
+                [(ngModel)]="productoForm.codigoBarras"
+                placeholder="7750123456789"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="vencimiento">Fecha de Vencimiento *</label>
+              <input
+                type="date"
+                id="vencimiento"
+                name="fechaVencimiento"
+                [(ngModel)]="productoForm.fechaVencimiento"
+                required
+              />
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="custom-checkbox">
+                <input
+                  type="checkbox"
+                  name="requiereReceta"
+                  [(ngModel)]="productoForm.requiereReceta"
+                />
+                <span class="checkmark"></span>
+                <span>¿Requiere Receta Médica?</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="!productoForm.nombre.trim()">
+              {{ modoEdicion ? 'Actualizar Producto' : 'Guardar Producto' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
